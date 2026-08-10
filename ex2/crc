@@ -1,0 +1,91 @@
+#include <stdio.h>
+#include <string.h>
+void xoroperation(char temp[], char divisor[], int pos) {
+   for (int i = 0; divisor[i] != '\0'; i++) {
+      if (temp[pos + i] == divisor[i]) {
+         temp[pos + i] = '0';
+      } else {
+         temp[pos + i] = '1';
+      }
+   }
+}
+void sender() {
+   char data[100] = "";
+   char divisor[50] = "";
+   char temp[200] = "";
+   char crc[50] = "";
+   printf("\n--- CRC Sender Side ---\n");
+   printf("Enter data bits: ");
+   scanf("%s", data);
+   printf("Enter generator polynomial (divisor): ");
+   scanf("%s", divisor);
+   int data_len = strlen(data);
+   int divisor_len = strlen(divisor);
+   strcpy(temp, data);
+   for (int i = 0; i < divisor_len - 1; i++) {
+      strcat(temp, "0");
+   }
+   for (int i = 0; i <= strlen(temp) - divisor_len; i++) {
+      if (temp[i] == '1') {
+         xoroperation(temp, divisor, i);
+      }
+   }
+   strcpy(crc, temp + data_len);
+   printf("CRC bits: %s\n", crc);
+   strcat(data, crc);
+   printf("Transmitted frame: %s\n", data);
+}
+void receiver() {
+   char received[200] = "";
+   char divisor[50] = "";
+   char temp[200] = "";
+   printf("\n--- CRC Receiver Side ---\n");
+   printf("Enter received frame: ");
+   scanf("%s", received);
+   printf("Enter generator polynomial (divisor): ");
+   scanf("%s", divisor);
+   int divisor_len = strlen(divisor);
+   strcpy(temp, received);
+   for (int i = 0; i <= strlen(temp) - divisor_len; i++) {
+      if (temp[i] == '1') {
+         xoroperation(temp, divisor, i);
+      }
+   }
+   int error = 0;
+   for (int i = strlen(temp) - divisor_len + 1; i < strlen(temp); i++) {
+      if (temp[i] == '1') {
+         error = 1;
+         break;
+      }
+   }
+   if (error) {
+      printf("Result: Error detected in transmission!\n");
+   } else {
+      printf("Result: No error detected.\n");
+   }
+}
+int main() {
+   int choice;
+   while (1) {
+      printf("\n=== CRC Error Detection ===");
+      printf("\n1. Sender side");
+      printf("\n2. Receiver side");
+      printf("\n3. Exit");
+      printf("\nEnter choice: ");
+      scanf("%d", &choice);
+
+      switch (choice) {
+         case 1:
+            sender();
+            break;
+         case 2:
+            receiver();
+            break;
+         case 3:
+            return 0;
+         default:
+            printf("Invalid choice!\n");
+      }
+   }
+   return 0;
+}
