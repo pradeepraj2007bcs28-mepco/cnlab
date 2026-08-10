@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char* addBinary(char* a, char* b) {
+    int i = strlen(a) - 1;
+    int j = strlen(b) - 1;
+
+    // Allocate space for the longest string + up to 1 carry bit + null terminator
+    int max_len = (i > j ? i : j) + 2;
+    char* result = (char*)malloc((max_len + 1) * sizeof(char));
+    if (result == NULL) return NULL; // Memory allocation safety check
+
+    result[max_len] = '\0';
+    int k = max_len - 1;
+    int carry = 0;
+
+    while (i >= 0 || j >= 0 || carry > 0) {
+        int sum = carry;
+        if (i >= 0) {
+            sum += a[i] - '0';
+            i--;
+        }
+        if (j >= 0) {
+            sum += b[j] - '0';
+            j--;
+        }
+        result[k] = (sum % 2) + '0';
+        k--;
+        carry = sum / 2;
+    }
+
+    // If we didn't use the leftmost character space (no final carry bit overflow),
+    // shift the string forward so that it starts exactly at index 0.
+    if (k == 0) {
+        memmove(result, result + 1, max_len);
+    }
+
+    return result;
+}
+
+int main() {
+    char binary1[100];
+    char binary2[100];
+
+    printf("=== Binary Addition Program ===\n");
+
+    printf("Enter first binary number: ");
+    if (scanf("%99s", binary1) != 1) {
+        printf("Invalid input.\n");
+        return 1;
+    }
+
+    printf("Enter second binary number: ");
+    if (scanf("%99s", binary2) != 1) {
+        printf("Invalid input.\n");
+        return 1;
+    }
+
+    char* result = addBinary(binary1, binary2);
+
+    if (result != NULL) {
+        printf("\nResult of Addition:\n");
+        printf("  %s\n", binary1);
+        printf("+ %s\n", binary2);
+        printf("-------------------\n");
+        printf("  %s\n", result);
+
+        // Clean up the memory safely from the exact base pointer
+        free(result);
+    } else {
+        printf("Memory allocation failed.\n");
+    }
+
+    return 0;
+}
