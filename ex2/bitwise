@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100
+
+int subarrayBitwiseORs(int* arr, int n)
+{
+    int prev[MAX], curr[MAX];
+    int prevSize = 0, currSize = 0;
+
+    int *set = malloc(n * MAX * sizeof(int));
+    int setSize = 0;
+
+    for (int i = 0; i < n; i++)
+    {
+        currSize = 0;
+
+        // OR of subarrays ending at i
+        curr[currSize++] = arr[i];
+
+        for (int j = 0; j < prevSize; j++)
+        {
+            int value = prev[j] | arr[i];
+
+            // Avoid duplicate values
+            if (value != curr[currSize - 1])
+                curr[currSize++] = value;
+        }
+
+        // Add current OR values to answer set
+        for (int j = 0; j < currSize; j++)
+        {
+            int found = 0;
+
+            for (int k = 0; k < setSize; k++)
+            {
+                if (set[k] == curr[j])
+                {
+                    found = 1;
+                    break;
+                }
+            }
+
+            if (!found)
+                set[setSize++] = curr[j];
+        }
+
+        // Copy curr to prev
+        prevSize = currSize;
+        for (int j = 0; j < currSize; j++)
+            prev[j] = curr[j];
+    }
+
+    free(set);
+    return setSize;
+}
+
+int main()
+{
+    int n;
+
+    printf("Enter array size: ");
+    scanf("%d", &n);
+
+    int arr[n];
+
+    printf("Enter array elements: ");
+    for (int i = 0; i < n; i++)
+        scanf("%d", &arr[i]);
+
+    printf("Number of distinct bitwise ORs = %d\n",
+           subarrayBitwiseORs(arr, n));
+
+    return 0;
+}
