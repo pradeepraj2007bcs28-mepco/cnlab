@@ -1,0 +1,76 @@
+#include <stdio.h>
+int is_parity_checked(int position, int parity_bit) {
+    return (position & parity_bit) != 0;
+}
+
+int main() {
+    int data[] = {1, 0, 1, 1}; 
+    int data_len = 4;
+    int r = 0;
+    while ((1 << r) < (data_len + r + 1)) {
+        r++;
+    }
+
+    int total_len = data_len + r;
+    int code[8]; 
+    int data_idx = 0;
+    int parity_check = 1; 
+
+    for (int i = 1; i <= total_len; i++) {
+        if (i == parity_check) {
+            code[i] = 0;         
+            parity_check <<= 1;   
+        } else {
+            code[i] = data[data_idx++];
+        }
+    }
+    for (int i = 0; i < r; i++) {
+        int parity_pos = (1 << i); 
+        int parity_val = 0;
+
+        for (int j = 1; j <= total_len; j++) 
+            if (j != parity_pos && is_parity_checked(j, parity_pos)) {
+                parity_val ^= code[j]; 
+            }
+        }
+        code[parity_pos] = parity_val;
+    }
+    printf("Encoded Hamming Code: ");
+    for (int i = 1; i <= total_len; i++) {
+        printf("%d ", code[i]);
+    }
+    printf("\n");
+    printf("Simulating error at position 5... New code: ");
+    for (int i = 1; i <= total_len; i++) printf("%d ", code[i]);
+    printf("\n");
+
+   
+    int error_pos = 0;
+    for (int i = 0; i < r; i++) {
+        int parity_pos = (1 << i);
+        int parity_val = 0;
+
+      
+        for (int j = 1; j <= total_len; j++) {
+            if (is_parity_checked(j, parity_pos)) {
+                parity_val ^= code[j];
+            }
+        }
+       
+        if (parity_val != 0) {
+            error_pos |= parity_pos; 
+        }
+    }
+
+    if (error_pos != 0) {
+        printf("Error detected at bit position: %d\n", error_pos);
+        code[error_pos] ^= 1; // Fix the error by flipping it back
+        printf("Corrected code: ");
+        for (int i = 1; i <= total_len; i++) printf("%d ", code[i]);
+        printf("\n");
+    } else {
+        printf("No errors detected.\n");
+    }
+
+    return 0;
+}
