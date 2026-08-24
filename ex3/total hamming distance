@@ -1,0 +1,30 @@
+#include <stdio.h>
+int totalHammingDistance(int* nums, int numsSize) {
+    int total_distance = 0;
+    for (int i = 0; i < 32; i++) {
+        int count_ones = 0;
+        for (int j = 0; j < numsSize; j++) {
+            
+            if ((nums[j] >> i) & 1) {
+                count_ones++;
+            }
+        }
+        int count_zeros = numsSize - count_ones;
+        total_distance += count_ones * count_zeros;
+    }
+    
+    return total_distance;
+}
+
+int main() {
+    int nums1[] = {4, 14, 2};
+    int size1 = sizeof(nums1)
+    printf("Total Hamming Distance: %d\n", totalHammingDistance(nums1, size1));
+
+    // Test Case 2
+    int nums2[] = {4, 14, 4};
+    int size2 = sizeof(nums2) / sizeof(nums2[0]);
+    printf("Total Hamming Distance: %d\n", totalHammingDistance(nums2, size2)); 
+
+    return 0;
+}
