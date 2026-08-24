@@ -1,0 +1,192 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+int main() {
+    char inputString[100];
+    int data[800]; // 100 characters max * 8 bits = 800 bits max
+    int hamming[1000], received[1000];
+    int m = 0, r = 0, totalBits;
+    int i, j, k, parity, errorPos = 0;
+    int choice, errorCount, targetBit;
+
+    printf("HAMMING CODE - STRING TO BINARY & SINGLE BIT ERROR CORRECTION\n");
+
+    printf("\nEnter a sentence: ");
+    if (scanf("%99[^\n]", inputString) != 1) {
+        printf("Invalid input string.\n");
+        return 1;
+    }
+
+    // Step 1: Convert characters to 8-bit binary data bits
+    int stringLength = strlen(inputString);
+    int bitIndex = 1;
+    for (i = 0; i < stringLength; i++) {
+        char ch = inputString[i];
+        for (j = 7; j >= 0; j--) {
+            data[bitIndex++] = (ch >> j) & 1;
+        }
+    }
+    m = bitIndex - 1;
+
+    printf("Converted Binary Data (%d bits total):\n", m);
+    for (i = 1; i <= m; i++) {
+        printf("%d", data[i]);
+        if (i % 8 == 0) printf(" ");
+    }
+    printf("\n");
+
+    // Step 2: Calculate number of parity bits required
+    while (pow(2, r) < (m + r + 1)) {
+        r++;
+    }
+    totalBits = m + r;
+    printf("\nNumber of parity bits = %d", r);
+    printf("\nTotal bits (Data + Parity) = %d\n", totalBits);
+
+    // Step 3: Place data bits around parity positions (Powers of 2)
+    j = 1;
+    for (i = 1; i <= totalBits; i++) {
+        if ((i & (i - 1)) == 0) {
+            hamming[i] = 0;
+        } else {
+            hamming[i] = data[j++];
+        }
+    }
+
+    // Step 4: Calculate Parity bits (Include all covered bits)
+    for (i = 0; i < r; i++) {
+        int pos = (int)pow(2, i);
+        parity = 0;
+        for (j = 1; j <= totalBits; j++) {
+            if (j & pos) {
+                parity ^= hamming[j];
+            }
+        }
+        hamming[pos] = parity;
+    }
+
+    printf("\nGenerated Hamming Code:\n");
+    for (i = 1; i <= totalBits; i++) {
+        printf("%d", hamming[i]);
+    }
+    printf("\n");
+
+    // Initialize received array with generated hamming code
+    for (i = 1; i <= totalBits; i++) {
+        received[i] = hamming[i];
+    }
+
+    // Step 5: Interactive Error Injection Module
+    printf("\n--- ERROR SIMULATION MODULE ---");
+    printf("\nSelect the type of transmission error to introduce:");
+    printf("\n1) No change (Perfect Transmission)");
+    printf("\n2) Single bit error");
+    printf("\n3) Multiple bits error");
+    printf("\nEnter your choice (1-3): ");
+    scanf("%d", &choice);
+
+    if (choice == 2) {
+        printf("Enter the bit position to flip (1 to %d): ", totalBits);
+        scanf("%d", &targetBit);
+        if (targetBit >= 1 && targetBit <= totalBits) {
+            received[targetBit] ^= 1;
+            printf("[ALERT] Bit at position %d was flipped successfully.\n", targetBit);
+        } else {
+            printf("[ERROR] Invalid position selected. No error introduced.\n");
+        }
+    }
+    else if (choice == 3) {
+        printf("How many bits do you want to flip? ");
+        scanf("%d", &errorCount);
+        for (k = 0; k < errorCount; k++) {
+            printf("Enter bit position %d to flip (1 to %d): ", k + 1, totalBits);
+            scanf("%d", &targetBit);
+            if (targetBit >= 1 && targetBit <= totalBits) {
+                received[targetBit] ^= 1;
+                printf("-> Bit %d flipped.\n", targetBit);
+            } else {
+                printf("-> Invalid position. Skipping.\n");
+            }
+        }
+    }
+    else {
+        printf("[INFO] Clean transmission selected. No bits altered.\n");
+    }
+
+    printf("\nReceived Code Packet:\n");
+    for (i = 1; i <= totalBits; i++) {
+        printf("%d", received[i]);
+    }
+    printf("\n");
+
+    // Early termination if a multiple bit error was injected
+    if (choice == 3 && errorCount > 1) {
+        printf("\n[FAILURE] Cannot recover original message string.");
+        printf("\nCause: %d bits were flipped. Standard Hamming Code can only correct a single bit error.", errorCount);
+   //     printf("\nMultiple overlapping parity mismatches make recovery impossible. Terminating execution.\n");
+        return 1;
+    }
+
+    // Step 6: Calculate Syndrome value
+    errorPos = 0;
+    for (i = 0; i < r; i++) {
+        int pos = (int)pow(2, i);
+        parity = 0;
+        for (j = 1; j <= totalBits; j++) {
+            if (j & pos) {
+                parity ^= received[j];
+            }
+        }
+        if (parity) {
+            errorPos += pos;
+        }
+    }
+
+    printf("\nCalculated Syndrome Value = %d", errorPos);
+
+    // Step 7: Evaluate and Correct Error
+    if (errorPos == 0) {
+        printf("\nNo Error Detected. Array is pristine or uncorrupted.\n");
+        printf("\nCorrected Hamming Code:\n");
+        for (i = 1; i <= totalBits; i++) {
+            printf("%d", received[i]);
+        }
+        printf("\n");
+    } else if (errorPos > totalBits) {
+        printf("\n[CRITICAL] Syndrome (%d) falls outside array boundaries.", errorPos);
+        printf("\nMultiple bits were likely flipped during transmission. Terminating execution.\n");
+        return 1;
+    } else {
+        printf("\nAttempting single-bit error auto-fix at position %d...\n", errorPos);
+        received[errorPos] ^= 1; // Flip back the corrupt bit
+
+        printf("Corrected Hamming Code:\n");
+        for (i = 1; i <= totalBits; i++) {
+            printf("%d", received[i]);
+        }
+        printf("\n");
+    }
+
+    // Step 8: Recover data bits and parse back to ASCII characters
+    int recoveredData[800];
+    int recIdx = 1;
+    for (i = 1; i <= totalBits; i++) {
+        if ((i & (i - 1)) != 0) {
+            recoveredData[recIdx++] = received[i];
+        }
+    }
+
+    printf("\nRecovered String Output: ");
+    for (i = 0; i < stringLength; i++) {
+        char ch = 0;
+        for (j = 0; j < 8; j++) {
+            ch = (ch << 1) | recoveredData[i * 8 + j + 1];
+        }
+        printf("%c", ch);
+    }
+    printf("\n");
+
+    return 0;
+}
