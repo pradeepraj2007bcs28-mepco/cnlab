@@ -1,0 +1,28 @@
+#include <stdio.h>
+int hammingDistance(int x, int y) {
+    int xor_result = x ^ y;
+    int distance = 0;
+    while (xor_result > 0) {
+        distance += (xor_result & 1);
+        xor_result >>= 1;
+    }
+    
+    return distance;
+}
+int hammingDistanceFast(int x, int y) {
+    int xor_result = x ^ y;
+    int distance = 0;
+    while (xor_result > 0) {
+        xor_result &= (xor_result - 1); 
+        distance++;
+    }
+    return distance;
+}
+
+int main() {
+    int x1 = 1, y1 = 4;
+    printf("Distance between %d and %d: %d\n", x1, y1, hammingDistance(x1, y1));
+    int x2 = 3, y2 = 1;
+    printf("Distance between %d and %d: %d\n", x2, y2, hammingDistance(x2, y2));
+    return 0;
+}
