@@ -1,0 +1,102 @@
+#include <stdlib.h>
+
+#define INF 1000000000
+
+int minimumEffortPath(int** heights, int heightsSize, int* heightsColSize)
+{
+    int rows = heightsSize;
+    int cols = heightsColSize[0];
+
+    int total = rows * cols;
+
+    // effort[i] = minimum effort required to reach cell i
+    int *effort = (int *)malloc(total * sizeof(int));
+
+    // visited[i] = whether the cell is already processed
+    int *visited = (int *)calloc(total, sizeof(int));
+
+    // Initialize efforts
+    for (int i = 0; i < total; i++)
+    {
+        effort[i] = INF;
+    }
+
+    // Starting cell
+    effort[0] = 0;
+
+    for (int count = 0; count < total; count++)
+    {
+        int current = -1;
+        int minEffort = INF;
+
+        // Find unvisited cell with minimum effort
+        for (int i = 0; i < total; i++)
+        {
+            if (!visited[i] && effort[i] < minEffort)
+            {
+                minEffort = effort[i];
+                current = i;
+            }
+        }
+
+        if (current == -1)
+            break;
+
+        visited[current] = 1;
+
+        // Destination reached
+        if (current == total - 1)
+        {
+            int answer = effort[current];
+
+            free(effort);
+            free(visited);
+
+            return answer;
+        }
+
+        int r = current / cols;
+        int c = current % cols;
+
+        // Four possible directions
+        int dr[] = {-1, 1, 0, 0};
+        int dc[] = {0, 0, -1, 1};
+
+        for (int d = 0; d < 4; d++)
+        {
+            int nr = r + dr[d];
+            int nc = c + dc[d];
+
+            // Check valid cell
+            if (nr >= 0 && nr < rows &&
+                nc >= 0 && nc < cols)
+            {
+                int next = nr * cols + nc;
+
+                if (visited[next])
+                    continue;
+
+                // Height difference between current and next cell
+                int difference =
+                    abs(heights[r][c] - heights[nr][nc]);
+
+                // Effort of this path
+                int newEffort = effort[current];
+
+                if (difference > newEffort)
+                    newEffort = difference;
+
+                // Update if this path is better
+                if (newEffort < effort[next])
+                {
+                    effort[next] = newEffort;
+                }
+            }
+        }
+    }
+
+    free(effort);
+    free(visited);
+
+    return -1;
+}
