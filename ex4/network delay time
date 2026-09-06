@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <limits.h>
+#define MAXN 105
+#define INF 1000000000
+int networkDelayTime(int times[][3], int timesSize, int n, int k)
+{
+    int graph[MAXN][MAXN];
+    int dist[MAXN];
+    int visited[MAXN] = {0};
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            graph[i][j] = INF;
+        }
+    }
+    for (int i = 0; i < timesSize; i++)
+    {
+        int u = times[i][0];
+        int v = times[i][1];
+        int w = times[i][2];
+        graph[u][v] = w;
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        dist[i] = INF;
+    }
+    dist[k] = 0;
+    for (int count = 1; count <= n; count++)
+    {
+        int u = -1;
+        int minDist = INF;
+        for (int i = 1; i <= n; i++)
+        {
+            if (!visited[i] && dist[i] < minDist)
+            {
+                minDist = dist[i];
+                u = i;
+            }
+        }
+        if (u == -1)
+            break;
+        visited[u] = 1;
+        for (int v = 1; v <= n; v++)
+        {
+            if (!visited[v] &&
+                graph[u][v] != INF &&
+                dist[u] + graph[u][v] < dist[v])
+            {
+                dist[v] = dist[u] + graph[u][v];
+            }
+        }
+    }
+    int answer = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        if (dist[i] == INF)
+            return -1;
+        if (dist[i] > answer)
+            answer = dist[i];
+    }
+    return answer;
+}
+int main()
+{
+    int times[6000][3];
+    int timesSize;
+    int n, k;
+    printf("Enter number of edges: ");
+    scanf("%d", &timesSize);
+    printf("Enter edges (source destination time):\n")
+    for (int i = 0; i < timesSize; i++)
+    {
+        scanf("%d %d %d",
+              &times[i][0],
+              &times[i][1],
+              &times[i][2]);
+    
+    printf("Enter number of nodes: ");
+    scanf("%d", &n);
+    printf("Enter starting node k: ");
+    scanf("%d", &k);
+    int result = networkDelayTime(times, timesSize, n, k);
+    printf("Minimum time for all nodes to receive signal = %d\n", result)
+    return 0;
+}
