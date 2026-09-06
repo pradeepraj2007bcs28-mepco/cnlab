@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define MAX_ROUTES 500
+#define MAX_STOPS 100000
+int numBusesTaken(int routes[][MAX_STOPS], int routeSizes[],
+                  int n, int source, int target)
+{
+    if (source == target)
+        return 0;
+    int visitedBus[MAX_ROUTES] = {0};
+    int visitedStop[MAX_STOPS] = {0};
+    int queue[MAX_ROUTES];
+    int front = 0, rear = 0;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < routeSizes[i]; j++)
+        {
+            if (routes[i][j] == source)
+            {
+                queue[rear++] = i;
+                visitedBus[i] = 1;
+                break;
+            }
+        }
+    }
+    int buses = 1;
+    while (front < rear)
+    {
+        int currentLevelSize = rear - front;
+        for (int k = 0; k < currentLevelSize; k++)
+        {
+            int bus = queue[front++];
+            for (int j = 0; j < routeSizes[bus]; j++)
+            {
+                int stop = routes[bus][j];
+                if (stop == target)
+                    return buses;
+                if (visitedStop[stop])
+                    continue;
+                visitedStop[stop] = 1;
+                for (int nextBus = 0; nextBus < n; nextBus++)
+                {
+                    if (visitedBus[nextBus])
+                        continue;
+                    for (int p = 0; p < routeSizes[nextBus]; p++)
+                    {
+                        if (routes[nextBus][p] == stop)
+                        {
+                            queue[rear++] = nextBus;
+                            visitedBus[nextBus] = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        buses++;
+    }
+    return -1;
+}
+int main()
+{
+    int n;
+    printf("Enter number of bus routes: ");
+    scanf("%d", &n);
+    int routes[MAX_ROUTES][MAX_STOPS];
+    int routeSizes[MAX_ROUTES];
+    for (int i = 0; i < n; i++)
+    {
+        printf("Enter number of stops in route %d: ", i);
+        scanf("%d", &routeSizes[i]);
+        printf("Enter stops: ");
+        for (int j = 0; j < routeSizes[i]; j++)
+        {
+            scanf("%d", &routes[i][j]);
+        }
+    }
+    int source, target;
+    printf("Enter source: ");
+    scanf("%d", &source);
+    printf("Enter target: ");
+    scanf("%d", &target);
+    int result = numBusesTaken(routes, routeSizes, n, source, target);
+    printf("Minimum number of buses = %d\n", result);
+    return 0;
+}
