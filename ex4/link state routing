@@ -1,0 +1,104 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX 10
+#define INF 999
+
+// Helper function to print the generated routing table layout
+void printLinkStateTable(int source, int dist[MAX], int next_hop[MAX], int n) {
+    printf("\n--- Link State Routing Table for Router %d ---\n", source + 1);
+    printf("%-15s %-10s %-15s\n", "Destination", "Cost", "Next Hop");
+    printf("-----------------------------------------\n");
+    for (int i = 0; i < n; i++) {
+        printf("Router %-9d ", i + 1);
+
+        if (dist[i] == INF) {
+            printf("%-10s %-15s\n", "INF", "-");
+        } else if (i == source) {
+            printf("%-10d %-15s (Self)\n", 0, "-");
+        } else {
+            printf("%-10d Router %-d\n", dist[i], next_hop[i] + 1);
+        }
+    }
+}
+
+// Dijkstra's Algorithm implementation for Link State Routing
+void runLinkState(int cost[MAX][MAX], int n, int source) {
+    int dist[MAX];
+    int next_hop[MAX];
+    bool visited[MAX];
+
+    // 1. Initialization
+    for (int i = 0; i < n; i++) {
+        dist[i] = cost[source][i];
+        visited[i] = false;
+
+        if (cost[source][i] != INF && i != source) {
+            next_hop[i] = i; // Next hop is the destination itself initially
+        } else {
+            next_hop[i] = -1; // No direct path
+        }
+    }
+
+    dist[source] = 0;
+    visited[source] = true;
+
+    // 2. Find the shortest path for all remaining (n-1) nodes
+    for (int count = 0; count < n - 1; count++) {
+        int min_dist = INF;
+        int u = -1;
+
+        // Find the unvisited node with the minimum distance
+        for (int v = 0; v < n; v++) {
+            if (!visited[v] && dist[v] < min_dist) {
+                min_dist = dist[v];
+                u = v;
+            }
+        }
+
+        // If remaining nodes are unreachable, stop
+        if (u == -1) break;
+
+        visited[u] = true;
+
+        // Update the distance and next hop values of the neighboring vertices
+        for (int v = 0; v < n; v++) {
+            if (!visited[v] && cost[u][v] != INF) {
+                if (dist[u] + cost[u][v] < dist[v]) {
+                    dist[v] = dist[u] + cost[u][v];
+
+                    // Next hop propagates from the path used to reach intermediate node 'u'
+                    next_hop[v] = next_hop[u];
+                }
+            }
+        }
+    }
+
+    // 3. Print the completed routing table for this source node
+    printLinkStateTable(source, dist, next_hop, n);
+}
+
+int main() {
+    int n, cost[MAX][MAX];
+    int i, j;
+
+    printf("Enter number of routers: ");
+    if (scanf("%d", &n) != 1) return 1;
+
+    printf("Enter %d for no direct connection\n", INF);
+    printf("Enter the cost matrix (Link State database):\n");
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            if (scanf("%d", &cost[i][j]) != 1) return 1;
+        }
+    }
+
+    // Generate individual routing tables for ALL routers in the topology
+    printf("\n================ LINK STATE ROUTING TABLES ================\n");
+    for (i = 0; i < n; i++) {
+        runLinkState(cost, n, i);
+    }
+    printf("===========================================================\n");
+
+    return 0;
+}
